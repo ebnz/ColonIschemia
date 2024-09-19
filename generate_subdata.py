@@ -750,11 +750,12 @@ for item, proposal in product(data_lab_endo.columns, lab_suffixes):
 
 for key in lab_labels_endo.keys():
     # If only one Record for a blood marker, skip this blood marker
-    if len(data_lab_endo[lab_labels_endo[key]].count().sort_values(ascending=False).index) < 1:
+    if len(lab_labels_endo[key]) < 1:
         continue
 
     # Else use Record of blood marker with most datapoints
-    column_name_with_max_values = data_lab_endo[lab_labels_endo[key]].count().sort_values(ascending=False).index[0]
+    blood_marker_records = lab_labels_endo[key]
+    column_name_with_max_values = data_lab_endo[blood_marker_records].count().sort_values(ascending=False).index[0]
 
     # Drop all other Records of blood marker, except for the chosen one (with most datapoints)
     to_drop = copy.copy(lab_labels_endo[key])
@@ -772,12 +773,13 @@ for item, proposal in product(data_lab_surgical.columns, lab_suffixes):
         lab_labels_surgical[proposal].append(item)
 
 for key in lab_labels_surgical.keys():
-    # If only one Record for a blood marker, skip this blood marke
-    if len(data_lab_surgical[lab_labels_surgical[key]].count().sort_values(ascending=False).index) < 1:
+    # If only one Record for a blood marker, skip this blood marker
+    if len(lab_labels_surgical[key]) < 1:
         continue
 
     # Else use Record of blood marker with most datapoints
-    column_name_with_max_values = data_lab_surgical[lab_labels_surgical[key]].count().sort_values(ascending=False).index[0]
+    blood_marker_records = lab_labels_surgical[key]
+    column_name_with_max_values = data_lab_surgical[blood_marker_records].count().sort_values(ascending=False).index[0]
 
     # Drop all other Records of blood marker, except for the chosen one (with most datapoints)
     to_drop = copy.copy(lab_labels_surgical[key])
