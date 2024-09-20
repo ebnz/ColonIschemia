@@ -1,7 +1,5 @@
 import copy
-
 import pandas as pd
-
 from itertools import product
 
 data = pd.read_csv("data/data.csv", dtype=str)
@@ -25,7 +23,7 @@ data_personal
 """
 
 # Split up data_common into data_common and data_personal
-data_personal_columns = [
+data_personal_columns = pd.Index([
     "Record ID",
     "Age",
     "Gender",
@@ -33,9 +31,14 @@ data_personal_columns = [
     "Weight ",
     "BMI",
     "Height/weight/BMI nicht vorhanden",
-    "Complete?"]
+    "Complete?"])
+data_common_columns = data_common.columns.difference(data_personal_columns)
+
+# Record ID is Dataset-Indexing, must be in both datasets
+data_common_columns = data_common_columns.append(pd.Index(["Record ID"]))
+
 data_personal = data_common[data_personal_columns]
-data_common = data_common.drop(data_personal_columns, axis=1)
+data_common = data_common[data_common_columns]
 
 """
 data_imaging
