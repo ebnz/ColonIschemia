@@ -7,11 +7,9 @@ data = pd.read_csv("data/data.csv", dtype=str)
 """
 Split data into subdata-Categories
 """
-
 """
 data_common
 """
-
 # Get all columns where Repeat Instrument is empty (no clinical data in this row)
 data_common = data[data["Repeat Instrument"].isnull()]
 
@@ -21,7 +19,6 @@ data_common.dropna(how="all", axis=1, inplace=True)
 """
 data_personal
 """
-
 # Split up data_common into data_common and data_personal
 data_personal_columns = pd.Index([
     "Record ID",
@@ -43,7 +40,6 @@ data_common = data_common[data_common_columns]
 """
 data_imaging
 """
-
 data_imaging = data[data["Repeat Instrument"] == "Imaging"]
 data_imaging.dropna(how="all", axis=1, inplace=True)
 
@@ -51,38 +47,34 @@ data_imaging.dropna(how="all", axis=1, inplace=True)
 """
 data_endo
 """
-
 data_endo = data[data["Repeat Instrument"] == "Endoscopic data and findings"]
 data_endo.dropna(how="all", axis=1, inplace=True)
 
 """
 data_lab_endo
 """
-
 data_lab_endo = data[data["Repeat Instrument"] == "Lab Data (endoscopy)"]
 data_lab_endo.dropna(how="all", axis=1, inplace=True)
 
 """
 data_surgical
 """
-
 data_surgical = data[data["Repeat Instrument"] == "Surgical data and findings"]
 data_surgical.dropna(how="all", axis=1, inplace=True)
 
 """
 data_lab_surgical
 """
-
 data_lab_surgical = data[data["Repeat Instrument"] == "Lab data (surgery)"]
 data_lab_surgical.dropna(how="all", axis=1, inplace=True)
 
 """
 Fill in Conditional Columns
 """
-
 def apply_implicit_data_rule(df, conditional_column, implied_columns, conditional_column_value, implied_columns_value):
     """
-    Applies an implicit Data Rule "If Column conditional_column == conditional_column_value, then set implied_columns = implied_columns_value"
+    Applies an implicit Data Rule "If Column conditional_column == conditional_column_value,
+    then set implied_columns = implied_columns_value"
     Operates __in-place__
     Parameters:
     df: pd.DataFrame - The DataFrame to operate on
@@ -745,7 +737,7 @@ for item in lab_suffixes:
 """
 For data_lab_endo
 """
-# Sort all lab_labels to their corresponding blood_marker
+# Sort all blood_markers to their corresponding lab_label
 # e.g. Bilirubin -> Bilirubin 3 days before endo, Bilirubin 2 days before endo, ...
 for item, proposal in product(data_lab_endo.columns, lab_suffixes):
     if proposal in item and "day" in item:

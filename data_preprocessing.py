@@ -4,7 +4,6 @@ import numpy as np
 """
 USER-SETTINGS
 """
-
 # Exceptions for Columns that shall not be dropped from the Datasets can be set here:
 COLUMNS_DROP_EXCEPTIONS = [
     "Others_surgery_type_text:",
@@ -28,7 +27,6 @@ CLASS_IMBALANCE_RATIO = 0.95
 """
 Load Data
 """
-
 data_common = pd.read_csv("data/sub_data/data_common.csv")
 data_personal = pd.read_csv("data/sub_data/data_personal.csv")
 data_imaging = pd.read_csv("data/sub_data/data_imaging.csv")
@@ -50,7 +48,6 @@ data = {
 """
 Preprocessing
 """
-
 for key in data.keys():
     data[key] = data[key].dropna(how="all", axis=1)  # Drop all-NaN-Columns
     data[key] = data[key].drop(["Repeat Instrument",
@@ -100,8 +97,12 @@ for key in data.keys():
 """
 Apply Cell-Mapping
 """
-
 def map_cell(cell_value):
+    """
+    Applies all Replacement-Rules specified in CELL_MAPPING to cell_value.
+    :param cell_value: Value to apply the Replacement-Rules to
+    :return: cell_value with applied Rules
+    """
     return_value = str(cell_value)
     for target in CELL_MAPPING.keys():
         replacement = CELL_MAPPING[target]
