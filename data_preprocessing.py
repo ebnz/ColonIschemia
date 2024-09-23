@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import math
 
 """
 USER-SETTINGS
@@ -26,12 +25,9 @@ CELL_MAPPING = {
 # Class Imbalance Ratio
 CLASS_IMBALANCE_RATIO = 0.95
 
-# Variance Drop
-REL_DROP_THRESHOLD = 0.05
-
-# Count Drop
-COUNT_DROP_THRESHOLD = 0.3
-
+"""
+Load Data
+"""
 
 data_common = pd.read_csv("data/sub_data/data_common.csv")
 data_personal = pd.read_csv("data/sub_data/data_personal.csv")
@@ -41,9 +37,6 @@ data_lab_endo = pd.read_csv("data/sub_data/data_lab_endo.csv")
 data_surgical = pd.read_csv("data/sub_data/data_surgical.csv")
 data_lab_surgical = pd.read_csv("data/sub_data/data_lab_surgical.csv")
 
-"""
-Data-Structure for all Sub-Datasets
-"""
 data = {
     "data_common": data_common,
     "data_personal": data_personal,
@@ -54,10 +47,13 @@ data = {
     "data_lab_surgical": data_lab_surgical
 }
 
+"""
+Preprocessing
+"""
+
 for key in data.keys():
     data[key] = data[key].dropna(how="all", axis=1)  # Drop all-NaN-Columns
     data[key] = data[key].drop(["Repeat Instrument",
-                                "Repeat Instance",
                                 "Unnamed: 0"],
                                axis=1,
                                errors="ignore")      # Drop irrelevant Columns
@@ -120,35 +116,13 @@ for key in data.keys():
     data[key] = data[key].apply(pd.DataFrame.astype, dtype=float, errors="ignore")
 
     # Drop non-numeric Columns
-    to_drop = data[key].select_dtypes(exclude=np.number).columns
-    data[key] = data[key].drop(to_drop, axis=1)
+    to_drop = data[key].select_dtypes(exclude=np.number).columns    # Get non-numeric Columns
+    to_drop = to_drop.difference(COLUMNS_DROP_EXCEPTIONS)           # Apply Exceptions
+    data[key] = data[key].drop(to_drop, axis=1)                     # Drop Columns
 
-
-"""
-Drop due to Variance
-"""
-
-for key in data.keys():
-    variance_data = pd.DataFrame(data={
-        "std": data[key].std(),
-        "count": data[key].count(),
-        "mean": data[key].mean(),
-        "std div mean": np.abs(data[key].std() / data[key].mean())
-    })
-
-    # Drop Values with low Standard-Deviation / Mean
-    column_mask_std = variance_data["std div mean"] > REL_DROP_THRESHOLD
-    columns_std = data[key].columns[column_mask_std]
-
-    # Drop Values with low relative non-Null Count
-    column_mask_count = variance_data["count"] / len(data[key].index) > COUNT_DROP_THRESHOLD
-    columns_count = data[key].columns[column_mask_count]
-
-    data[key] = data[key][columns_count.intersection(columns_std)]
 
 """
 Export Preprocessed Data
 """
 for key in data.keys():
-    data[key] = data[key].astype(float)
     data[key].to_csv(f"data/prep_data/{key}.csv")
