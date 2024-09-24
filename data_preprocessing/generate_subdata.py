@@ -2,7 +2,7 @@ import copy
 import pandas as pd
 from itertools import product
 
-data = pd.read_csv("data/data.csv", dtype=str)
+data = pd.read_csv("../data/data.csv", dtype=str)
 
 """
 Split data into subdata-Categories

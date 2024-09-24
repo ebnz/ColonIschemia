@@ -42,13 +42,13 @@ P_VALUE_THRESHOLD = 0.5
 """
 Load Data
 """
-data_common = pd.read_csv("data/prep_data/data_common.csv")
-data_personal = pd.read_csv("data/prep_data/data_personal.csv")
-data_imaging = pd.read_csv("data/prep_data/data_imaging.csv")
-data_endo = pd.read_csv("data/prep_data/data_endo.csv")
-data_lab_endo = pd.read_csv("data/prep_data/data_lab_endo.csv")
-data_surgical = pd.read_csv("data/prep_data/data_surgical.csv")
-data_lab_surgical = pd.read_csv("data/prep_data/data_lab_surgical.csv")
+data_common = pd.read_csv("../data/prep_data/data_common.csv")
+data_personal = pd.read_csv("../data/prep_data/data_personal.csv")
+data_imaging = pd.read_csv("../data/prep_data/data_imaging.csv")
+data_endo = pd.read_csv("../data/prep_data/data_endo.csv")
+data_lab_endo = pd.read_csv("../data/prep_data/data_lab_endo.csv")
+data_surgical = pd.read_csv("../data/prep_data/data_surgical.csv")
+data_lab_surgical = pd.read_csv("../data/prep_data/data_lab_surgical.csv")
 
 data_common["Repeat Instance"] = 1
 data_personal["Repeat Instance"] = 1
