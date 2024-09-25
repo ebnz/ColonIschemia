@@ -32,7 +32,7 @@ We mainly focus on three different Classification-Tasks:
 | `data/data.csv`          | Renamed Columns (e.g. Duplicate Column Names)              |
 | `data/sub_data/`         | Split up data into chunks (data_common, data_imaging, ...) |
 | `data/prep_data/`        | Preprocessed data, ready for Training                      |
-| `data/complete_data`     | Reassembled data                                           |
+| `data/complete_data/`    | Reassembled data                                           |
 
 
 ## How to use this Repository
@@ -44,7 +44,7 @@ We mainly focus on three different Classification-Tasks:
 4. Run `python3 data_preprocessing/feature_selection.py` to filter out the (hopefully!) irrelevant Features. 
 5. Run `python3 train/train_xgboost.py` (or other Training-Script) to Train a Model. 
 6. View the directory `plots/` to review the Training-Results. 
-7. Fine-Tune the Models, mutating the Parameters in the Sections called `USER-SETTINGS` the Scripts. 
+7. Fine-Tune the Models, mutating the Parameters in the Script's Sections called `USER-SETTINGS`. 
 
 | Folder-Name        | Contents                                       |
 |--------------------|------------------------------------------------|
