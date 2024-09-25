@@ -4,10 +4,10 @@ from sklearn import model_selection, feature_selection, metrics
 from sklearn.utils import class_weight
 import matplotlib.pyplot as plt
 
-import lightgbm as lgbm
+from sklearn.ensemble import RandomForestClassifier
 
 """
-USER-SETTINGS farther down in script
+USER_SETTINGS farther down in script
 """
 
 """
@@ -93,8 +93,7 @@ USER-SETTINGS
 """
 # Define Train-, Validation-Split Sizes
 # VALIDATION_SIZE is relative to size of Complete Dataset minus Datarows of Test-Set
-TEST_SIZE = 0.23
-VALIDATION_SIZE = 0.23
+TEST_SIZE = 0.3
 
 # Define Training Target
 y = data["Ischämie?"]
@@ -105,48 +104,37 @@ y = data["Ischämie?"]
 # Number of Features to Select
 N_FEATURES_TO_SELECT = 4
 
-# Hyperparameter min_child_samples (is not being optimized)
-MIN_CHILD_SAMPLES = 3
-
 """Feature-Selection"""
-# early_stopping_rounds in Feature-Selection
-EARLY_STOPPING_ROUNDS_FEATURE_SELECTION = 3
-
 # Initial Hyperparameters for Feature-Selection
-LEARNING_RATE_INIT = 0.15
-NUM_LEAVES_INIT = 5
+N_ESTIMATORS_INIT = 3
+MAX_DEPTH_INIT = 2
 
 """Hyperparameter-Selection"""
-# early_stopping_rounds in Hyperparameter-Selection
-EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION = 5
-
 # Number of Runs of the Hyperparameter-Optimization
 HP_OPTIMIZATION_ITERATIONS = 20
 
 # Hyperparameters and their Values to optimize
 HYPERPARAM_SPACE = {
-        'learning_rate': np.linspace(0.01, 0.5, 50),
-        'num_leaves': np.arange(3, 5),  # Excluding stop-Variable
-        'subsample': np.linspace(0.01, 0.75, 100)
+        'n_estimators': np.arange(2, 5),
+        'max_depth': np.arange(2, 4),   # Excluding stop-Variable
+        'min_impurity_decrease': np.linspace(0.001, 0.5, 100)
 }
 
 """
 Generate Dataset-Splits
 """
-# Define Train-, Validation- and Test-Splits
+# Define Train- and Test-Splits
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=TEST_SIZE)
-X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train, test_size=VALIDATION_SIZE)
 
 """
 Model-based Feature-Selection
 """
 # Define Model and SequentialFeatureSelector for selecting best Features from Dataset
-model = lgbm.LGBMClassifier(
-    learning_rate=LEARNING_RATE_INIT,
-    num_leaves=NUM_LEAVES_INIT,
-    min_child_samples=MIN_CHILD_SAMPLES,
-    objective="binary"
+model = RandomForestClassifier(
+    n_estimators=N_ESTIMATORS_INIT,
+    max_depth=MAX_DEPTH_INIT
 )
+
 selector = feature_selection.SequentialFeatureSelector(
     model,
     n_features_to_select=N_FEATURES_TO_SELECT,
@@ -159,11 +147,9 @@ selected_features = selector.get_feature_names_out()
 X_selected = X_train[selected_features]
 
 # Performance after Feature-Selection
-model = lgbm.LGBMClassifier(
-    learning_rate=LEARNING_RATE_INIT,
-    num_leaves=NUM_LEAVES_INIT,
-    min_child_samples=MIN_CHILD_SAMPLES,
-    objective="binary"
+model = RandomForestClassifier(
+    n_estimators=3,
+    max_depth=3
 )
 
 # Calculate Class-Weights for balanced Dataset
@@ -172,8 +158,6 @@ classes_weights = class_weight.compute_sample_weight(class_weight='balanced', y=
 model.fit(
     X_selected,
     y_train,
-    eval_set=[(X_val[selected_features], y_val)],
-    callbacks=[lgbm.early_stopping(stopping_rounds=EARLY_STOPPING_ROUNDS_FEATURE_SELECTION)],
     sample_weight=classes_weights
 )
 
@@ -184,21 +168,18 @@ test_f1 = metrics.f1_score(y_test, y_pred)
 test_precision = metrics.precision_score(y_test, y_pred)
 test_recall = metrics.recall_score(y_test, y_pred)
 
-plt.plot(model._evals_result["valid_0"]["binary_logloss"], label="Validation Logloss")
+plt.plot([], [])
 plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
 plt.legend()
 
-plt.savefig("plots/lgbm_validation_logloss_feature_selection.png", dpi=300)
+plt.savefig("plots/rf_validation_logloss_feature_selection.png", dpi=300)
 plt.clf()
 
 """
 Hyperparameter-Selection
 """
 # Define Model and RandomizedSearchCV with Hyperparameter-Space for Hyperparameter-Optimization
-model = lgbm.LGBMClassifier(
-    objective="binary",
-    min_child_samples=MIN_CHILD_SAMPLES
-)
+model = RandomForestClassifier()
 
 selector = model_selection.RandomizedSearchCV(
     model,
@@ -210,18 +191,14 @@ selector = model_selection.RandomizedSearchCV(
 selector.fit(
     X_selected,
     y_train,
-    eval_set=[(X_val[selected_features], y_val)],
-    callbacks=[lgbm.early_stopping(stopping_rounds=EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION)],
     sample_weight=classes_weights
 )
 
 # Performance
-model = lgbm.LGBMClassifier(**selector.best_params_, min_child_samples=MIN_CHILD_SAMPLES, objective="binary")
+model = RandomForestClassifier(**selector.best_params_)
 model.fit(
     X_selected,
     y_train,
-    eval_set=[(X_val[selected_features], y_val)],
-    callbacks=[lgbm.early_stopping(stopping_rounds=EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION)],
     sample_weight=classes_weights
 )
 
@@ -231,11 +208,11 @@ test_f1 = metrics.f1_score(y_test, y_pred)
 test_precision = metrics.precision_score(y_test, y_pred)
 test_recall = metrics.recall_score(y_test, y_pred)
 
-plt.plot(model._evals_result["valid_0"]["binary_logloss"], label="Validation Logloss")
+plt.plot([], [])
 plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
 plt.legend()
 
-plt.savefig("plots/lgbm_validation_logloss_hyperparameter_selection.png", dpi=300)
+plt.savefig("plots/rf_validation_logloss_hyperparameter_selection.png", dpi=300)
 plt.clf()
 
 """
