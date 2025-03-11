@@ -95,145 +95,146 @@ USER-SETTINGS
 # VALIDATION_SIZE is relative to size of Complete Dataset minus Datarows of Test-Set
 TEST_SIZE = 0.3
 
-# Define Random State
-RANDOM_STATE = 42
+# Feature-Selection Values
+acc_fs = []
+f1_fs = []
+prec_fs = []
+rec_fs = []
 
-# Define Training Target
-y = data["Ischämie?"]
-#y = data["Ischämie?"] == data["Findings compatible with ischemia"]
-#y = (data["Enterectomy"].astype(bool) | data["Colectomy"].astype(bool))
-#y = (data["Enterectomy"].astype(bool) | data["Colectomy"].astype(bool)) | (data["Exploration"].astype(bool) & ~(data["Others_surgery_type_text:"].isin(["Abdo Mac", "AbdoMAC", "AbdoVac"])).astype(bool))
+# Hyperparameter Opt. Values
+acc_hp = []
+f1_hp = []
+prec_hp = []
+rec_hp = []
 
-# Number of Features to Select
-N_FEATURES_TO_SELECT = 4
+for RANDOM_STATE in range(10):
+    # Define Training Target
+    y = data["Ischämie?"]
+    #y = data["Ischämie?"] == data["Findings compatible with ischemia"]
+    #y = (data["Enterectomy"].astype(bool) | data["Colectomy"].astype(bool))
+    #y = (data["Enterectomy"].astype(bool) | data["Colectomy"].astype(bool)) | (data["Exploration"].astype(bool) & ~(data["Others_surgery_type_text:"].isin(["Abdo Mac", "AbdoMAC", "AbdoVac"])).astype(bool))
 
-"""Feature-Selection"""
-# Initial Hyperparameters for Feature-Selection
-N_ESTIMATORS_INIT = 3
-MAX_DEPTH_INIT = 3
+    # Number of Features to Select
+    N_FEATURES_TO_SELECT = 4
 
-"""Hyperparameter-Selection"""
-# Number of Runs of the Hyperparameter-Optimization
-HP_OPTIMIZATION_ITERATIONS = 20
+    """Feature-Selection"""
+    # Initial Hyperparameters for Feature-Selection
+    N_ESTIMATORS_INIT = 3
+    MAX_DEPTH_INIT = 3
 
-# Hyperparameters and their Values to optimize
-HYPERPARAM_SPACE = {
-        'n_estimators': np.arange(2, 5),
-        'max_depth': np.arange(2, 4),   # Excluding stop-Variable
-        'min_impurity_decrease': np.linspace(0.001, 0.5, 100)
-}
+    """Hyperparameter-Selection"""
+    # Number of Runs of the Hyperparameter-Optimization
+    HP_OPTIMIZATION_ITERATIONS = 20
 
-"""
-Generate Dataset-Splits
-"""
-# Define Train- and Test-Splits
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
-                                                                    test_size=TEST_SIZE, random_state=RANDOM_STATE)
+    # Hyperparameters and their Values to optimize
+    HYPERPARAM_SPACE = {
+            'n_estimators': np.arange(2, 5),
+            'max_depth': np.arange(2, 4),   # Excluding stop-Variable
+            'min_impurity_decrease': np.linspace(0.001, 0.5, 100)
+    }
 
-"""
-Model-based Feature-Selection
-"""
-# Define Model and SequentialFeatureSelector for selecting best Features from Dataset
-model = RandomForestClassifier(
-    n_estimators=N_ESTIMATORS_INIT,
-    max_depth=MAX_DEPTH_INIT,
-    random_state=RANDOM_STATE
-)
+    """
+    Generate Dataset-Splits
+    """
+    # Define Train- and Test-Splits
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
+                                                                        test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
-selector = feature_selection.SequentialFeatureSelector(
-    model,
-    n_features_to_select=N_FEATURES_TO_SELECT,
-    cv=3
-)
+    """
+    Model-based Feature-Selection
+    """
+    # Define Model and SequentialFeatureSelector for selecting best Features from Dataset
+    model = RandomForestClassifier(
+        n_estimators=N_ESTIMATORS_INIT,
+        max_depth=MAX_DEPTH_INIT,
+        random_state=RANDOM_STATE
+    )
 
-# Run Feature-Selection and obtain selected Features
-selector.fit(X_train, y_train)
-selected_features = selector.get_feature_names_out()
-X_selected = X_train[selected_features]
+    selector = feature_selection.SequentialFeatureSelector(
+        model,
+        n_features_to_select=N_FEATURES_TO_SELECT,
+        cv=3
+    )
 
-# Performance after Feature-Selection
-model = RandomForestClassifier(
-    n_estimators=3,
-    max_depth=3,
-    random_state=RANDOM_STATE
-)
+    # Run Feature-Selection and obtain selected Features
+    selector.fit(X_train, y_train)
+    selected_features = selector.get_feature_names_out()
+    X_selected = X_train[selected_features]
 
-# Calculate Class-Weights for balanced Dataset
-classes_weights = class_weight.compute_sample_weight(class_weight='balanced', y=y_train)
+    # Performance after Feature-Selection
+    model = RandomForestClassifier(
+        n_estimators=3,
+        max_depth=3,
+        random_state=RANDOM_STATE
+    )
 
-model.fit(
-    X_selected,
-    y_train,
-    sample_weight=classes_weights
-)
+    # Calculate Class-Weights for balanced Dataset
+    classes_weights = class_weight.compute_sample_weight(class_weight='balanced', y=y_train)
 
-# Obtain Results using the Test-Dataset and plot Loss on Validation-Dataset
-y_pred = model.predict(X_test[selected_features])
-test_accuracy = metrics.accuracy_score(y_test, y_pred)
-test_f1 = metrics.f1_score(y_test, y_pred)
-test_precision = metrics.precision_score(y_test, y_pred)
-test_recall = metrics.recall_score(y_test, y_pred)
+    model.fit(
+        X_selected,
+        y_train,
+        sample_weight=classes_weights
+    )
 
-print(f"ACC:  {test_accuracy}")
-print(f"F1:   {test_f1}")
-print(f"PREC: {test_precision}")
-print(f"REC:  {test_recall}")
+    # Obtain Results using the Test-Dataset and plot Loss on Validation-Dataset
+    y_pred = model.predict(X_test[selected_features])
+    acc_fs.append(metrics.accuracy_score(y_test, y_pred))
+    f1_fs.append(metrics.f1_score(y_test, y_pred))
+    prec_fs.append(metrics.precision_score(y_test, y_pred))
+    rec_fs.append(metrics.recall_score(y_test, y_pred))
 
-plt.plot([], [])
-plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
-plt.legend()
 
-plt.savefig("../plots/rf_validation_logloss_feature_selection.png", dpi=300)
-plt.clf()
+    """
+    Hyperparameter-Selection
+    """
+    # Define Model and RandomizedSearchCV with Hyperparameter-Space for Hyperparameter-Optimization
+    model = RandomForestClassifier(random_state=RANDOM_STATE)
 
-"""
-Hyperparameter-Selection
-"""
-# Define Model and RandomizedSearchCV with Hyperparameter-Space for Hyperparameter-Optimization
-model = RandomForestClassifier(random_state=RANDOM_STATE)
+    selector = model_selection.RandomizedSearchCV(
+        model,
+        HYPERPARAM_SPACE,
+        n_iter=HP_OPTIMIZATION_ITERATIONS,
+        cv=3,
+        random_state=RANDOM_STATE
+    )
 
-selector = model_selection.RandomizedSearchCV(
-    model,
-    HYPERPARAM_SPACE,
-    n_iter=HP_OPTIMIZATION_ITERATIONS,
-    cv=3,
-    random_state=RANDOM_STATE
-)
+    selector.fit(
+        X_selected,
+        y_train,
+        sample_weight=classes_weights
+    )
 
-selector.fit(
-    X_selected,
-    y_train,
-    sample_weight=classes_weights
-)
+    # Performance
+    model = RandomForestClassifier(random_state=RANDOM_STATE, **selector.best_params_)
+    model.fit(
+        X_selected,
+        y_train,
+        sample_weight=classes_weights
+    )
 
-# Performance
-model = RandomForestClassifier(random_state=RANDOM_STATE, **selector.best_params_)
-model.fit(
-    X_selected,
-    y_train,
-    sample_weight=classes_weights
-)
+    y_pred = model.predict(X_test[selected_features])
+    acc_hp.append(metrics.accuracy_score(y_test, y_pred))
+    f1_hp.append(metrics.f1_score(y_test, y_pred))
+    prec_hp.append(metrics.precision_score(y_test, y_pred))
+    rec_hp.append(metrics.recall_score(y_test, y_pred))
 
-y_pred = model.predict(X_test[selected_features])
-test_accuracy = metrics.accuracy_score(y_test, y_pred)
-test_f1 = metrics.f1_score(y_test, y_pred)
-test_precision = metrics.precision_score(y_test, y_pred)
-test_recall = metrics.recall_score(y_test, y_pred)
+print("Feature Selection: ")
+print(f"ACC: Mean: {np.mean(acc_fs)} | "
+      f"+-: {np.std(acc_fs)}")
+print(f"F1: Mean: {np.mean(f1_fs)} | "
+      f"+-: {np.std(f1_fs)}")
+print(f"PREC: Mean: {np.mean(prec_fs)} | "
+      f"+-: {np.std(prec_fs)}")
+print(f"REC: Mean: {np.mean(rec_fs)} | "
+      f"+-: {np.std(rec_fs)}")
 
-print(f"ACC:  {test_accuracy}")
-print(f"F1:   {test_f1}")
-print(f"PREC: {test_precision}")
-print(f"REC:  {test_recall}")
-
-plt.plot([], [])
-plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
-plt.legend()
-
-plt.savefig("../plots/rf_validation_logloss_hyperparameter_selection.png", dpi=300)
-plt.clf()
-
-"""
-Conclusion
-"""
-print(f"Selected Features: {selected_features}")
-print(f"Best Hyperparameters: {selector.best_params_}")
+print("HP Optimization: ")
+print(f"ACC: Mean: {np.mean(acc_hp)} | "
+      f"+-: {np.std(acc_hp)}")
+print(f"F1: Mean: {np.mean(f1_hp)} | "
+      f"+-: {np.std(f1_hp)}")
+print(f"PREC: Mean: {np.mean(prec_hp)} | "
+      f"+-: {np.std(prec_hp)}")
+print(f"REC: Mean: {np.mean(rec_hp)} | "
+      f"+-: {np.std(rec_hp)}")
