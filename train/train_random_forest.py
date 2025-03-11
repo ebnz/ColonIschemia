@@ -13,7 +13,7 @@ USER_SETTINGS farther down in script
 """
 Load Data
 """
-data = pd.read_csv("data/complete_data/data_complete_gt.csv")
+data = pd.read_csv("../data/complete_data/data_complete_gt.csv")
 data = data.set_index("Record ID")
 
 preferred_columns_x = ['ARDS',
@@ -95,6 +95,9 @@ USER-SETTINGS
 # VALIDATION_SIZE is relative to size of Complete Dataset minus Datarows of Test-Set
 TEST_SIZE = 0.3
 
+# Define Random State
+RANDOM_STATE = 42
+
 # Define Training Target
 y = data["Ischämie?"]
 #y = data["Ischämie?"] == data["Findings compatible with ischemia"]
@@ -107,7 +110,7 @@ N_FEATURES_TO_SELECT = 4
 """Feature-Selection"""
 # Initial Hyperparameters for Feature-Selection
 N_ESTIMATORS_INIT = 3
-MAX_DEPTH_INIT = 2
+MAX_DEPTH_INIT = 3
 
 """Hyperparameter-Selection"""
 # Number of Runs of the Hyperparameter-Optimization
@@ -124,7 +127,8 @@ HYPERPARAM_SPACE = {
 Generate Dataset-Splits
 """
 # Define Train- and Test-Splits
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=TEST_SIZE)
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
+                                                                    test_size=TEST_SIZE, random_state=RANDOM_STATE)
 
 """
 Model-based Feature-Selection
@@ -132,7 +136,8 @@ Model-based Feature-Selection
 # Define Model and SequentialFeatureSelector for selecting best Features from Dataset
 model = RandomForestClassifier(
     n_estimators=N_ESTIMATORS_INIT,
-    max_depth=MAX_DEPTH_INIT
+    max_depth=MAX_DEPTH_INIT,
+    random_state=RANDOM_STATE
 )
 
 selector = feature_selection.SequentialFeatureSelector(
@@ -149,7 +154,8 @@ X_selected = X_train[selected_features]
 # Performance after Feature-Selection
 model = RandomForestClassifier(
     n_estimators=3,
-    max_depth=3
+    max_depth=3,
+    random_state=RANDOM_STATE
 )
 
 # Calculate Class-Weights for balanced Dataset
@@ -168,24 +174,30 @@ test_f1 = metrics.f1_score(y_test, y_pred)
 test_precision = metrics.precision_score(y_test, y_pred)
 test_recall = metrics.recall_score(y_test, y_pred)
 
+print(f"ACC:  {test_accuracy}")
+print(f"F1:   {test_f1}")
+print(f"PREC: {test_precision}")
+print(f"REC:  {test_recall}")
+
 plt.plot([], [])
 plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
 plt.legend()
 
-plt.savefig("plots/rf_validation_logloss_feature_selection.png", dpi=300)
+plt.savefig("../plots/rf_validation_logloss_feature_selection.png", dpi=300)
 plt.clf()
 
 """
 Hyperparameter-Selection
 """
 # Define Model and RandomizedSearchCV with Hyperparameter-Space for Hyperparameter-Optimization
-model = RandomForestClassifier()
+model = RandomForestClassifier(random_state=RANDOM_STATE)
 
 selector = model_selection.RandomizedSearchCV(
     model,
     HYPERPARAM_SPACE,
     n_iter=HP_OPTIMIZATION_ITERATIONS,
-    cv=3
+    cv=3,
+    random_state=RANDOM_STATE
 )
 
 selector.fit(
@@ -195,7 +207,7 @@ selector.fit(
 )
 
 # Performance
-model = RandomForestClassifier(**selector.best_params_)
+model = RandomForestClassifier(random_state=RANDOM_STATE, **selector.best_params_)
 model.fit(
     X_selected,
     y_train,
@@ -208,11 +220,16 @@ test_f1 = metrics.f1_score(y_test, y_pred)
 test_precision = metrics.precision_score(y_test, y_pred)
 test_recall = metrics.recall_score(y_test, y_pred)
 
+print(f"ACC:  {test_accuracy}")
+print(f"F1:   {test_f1}")
+print(f"PREC: {test_precision}")
+print(f"REC:  {test_recall}")
+
 plt.plot([], [])
 plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
 plt.legend()
 
-plt.savefig("plots/rf_validation_logloss_hyperparameter_selection.png", dpi=300)
+plt.savefig("../plots/rf_validation_logloss_hyperparameter_selection.png", dpi=300)
 plt.clf()
 
 """

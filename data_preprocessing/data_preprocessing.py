@@ -126,4 +126,4 @@ for key in data.keys():
 Export Preprocessed Data
 """
 for key in data.keys():
-    data[key].to_csv(f"data/prep_data/{key}.csv")
+    data[key].to_csv(f"../data/prep_data/{key}.csv")

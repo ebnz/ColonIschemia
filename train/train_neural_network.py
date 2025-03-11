@@ -1,13 +1,11 @@
 import pandas as pd
 import numpy as np
-from sklearn import model_selection, feature_selection, metrics
+from sklearn import model_selection, feature_selection, neural_network, metrics
 from sklearn.utils import class_weight
 import matplotlib.pyplot as plt
 
-import lightgbm as lgbm
-
 """
-USER-SETTINGS farther down in script
+USER_SETTINGS farther down in script
 """
 
 """
@@ -96,7 +94,9 @@ USER-SETTINGS
 TEST_SIZE = 0.23
 VALIDATION_SIZE = 0.23
 
-# Define Random State
+# Max Epochs for NN Training
+MAX_ITER_NN = 100
+# Random State for Dataset-Shuffling
 RANDOM_STATE = 42
 
 # Define Training Target
@@ -108,51 +108,48 @@ y = data["Ischämie?"]
 # Number of Features to Select
 N_FEATURES_TO_SELECT = 4
 
-# Hyperparameter min_child_samples (is not being optimized)
-MIN_CHILD_SAMPLES = 3
-
 """Feature-Selection"""
 # early_stopping_rounds in Feature-Selection
 EARLY_STOPPING_ROUNDS_FEATURE_SELECTION = 3
 
 # Initial Hyperparameters for Feature-Selection
 LEARNING_RATE_INIT = 0.15
-NUM_LEAVES_INIT = 5
+MAX_DEPTH_INIT = 3
 
 """Hyperparameter-Selection"""
-# early_stopping_rounds in Hyperparameter-Selection
-EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION = 3
-
 # Number of Runs of the Hyperparameter-Optimization
 HP_OPTIMIZATION_ITERATIONS = 20
 
 # Hyperparameters and their Values to optimize
 HYPERPARAM_SPACE = {
-        'learning_rate': np.linspace(0.01, 0.5, 50),
-        'num_leaves': np.arange(2, 4),  # Excluding stop-Variable
-        'subsample': np.linspace(0.5, 1.0, 100)
+        'learning_rate_init': np.linspace(0.01, 0.5, 50),
+        'hidden_layer_sizes': [
+            (16, 8, 4),
+            (4, 4, 4),
+            (8, 4),
+            (4, 4)
+        ]
 }
 
 """
 Generate Dataset-Splits
 """
-# Define Train-, Validation- and Test-Splits
+# Define Train- and Test-Splits
+# Validation set is handles automatically during early stopping
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
                                                                     test_size=TEST_SIZE, random_state=RANDOM_STATE)
-X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train,
-                                                                  test_size=VALIDATION_SIZE, random_state=RANDOM_STATE)
 
 """
 Model-based Feature-Selection
 """
 # Define Model and SequentialFeatureSelector for selecting best Features from Dataset
-model = lgbm.LGBMClassifier(
-    learning_rate=LEARNING_RATE_INIT,
-    num_leaves=NUM_LEAVES_INIT,
-    min_child_samples=MIN_CHILD_SAMPLES,
-    objective="binary",
+model = neural_network.MLPClassifier(
+    hidden_layer_sizes=(8, 4),
+    learning_rate_init=LEARNING_RATE_INIT,
+    max_iter=MAX_ITER_NN,
     random_state=RANDOM_STATE
 )
+
 selector = feature_selection.SequentialFeatureSelector(
     model,
     n_features_to_select=N_FEATURES_TO_SELECT,
@@ -165,24 +162,23 @@ selected_features = selector.get_feature_names_out()
 X_selected = X_train[selected_features]
 
 # Performance after Feature-Selection
-model = lgbm.LGBMClassifier(
-    learning_rate=LEARNING_RATE_INIT,
-    num_leaves=NUM_LEAVES_INIT,
-    min_child_samples=MIN_CHILD_SAMPLES,
-    objective="binary",
+model = neural_network.MLPClassifier(
+    hidden_layer_sizes=(8, 4),
+    learning_rate_init=LEARNING_RATE_INIT,
+    early_stopping=True,
+    n_iter_no_change=EARLY_STOPPING_ROUNDS_FEATURE_SELECTION,
+    validation_fraction=0.23,
+    max_iter=MAX_ITER_NN,
     random_state=RANDOM_STATE
 )
 
-# Calculate Class-Weights for balanced Dataset
-classes_weights = class_weight.compute_sample_weight(class_weight='balanced', y=y_train)
-
+# Sample weights sadly not supported :/
 model.fit(
     X_selected,
-    y_train,
-    eval_set=[(X_val[selected_features], y_val)],
-    callbacks=[lgbm.early_stopping(stopping_rounds=EARLY_STOPPING_ROUNDS_FEATURE_SELECTION)],
-    sample_weight=classes_weights
+    y_train
 )
+
+print(len(selected_features))
 
 # Obtain Results using the Test-Dataset and plot Loss on Validation-Dataset
 y_pred = model.predict(X_test[selected_features])
@@ -196,20 +192,25 @@ print(f"F1:   {test_f1}")
 print(f"PREC: {test_precision}")
 print(f"REC:  {test_recall}")
 
-plt.plot(model._evals_result["valid_0"]["binary_logloss"], label="Validation Logloss")
+plt.plot(model.loss_curve_, label="Validation Logloss")
 plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
 plt.legend()
 
-plt.savefig("../plots/lgbm_validation_logloss_feature_selection.png", dpi=300)
+plt.savefig("../plots/nn_validation_logloss_feature_selection.png", dpi=300)
 plt.clf()
 
 """
 Hyperparameter-Selection
 """
+X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train,
+                                                                  test_size=VALIDATION_SIZE, random_state=RANDOM_STATE)
+
 # Define Model and RandomizedSearchCV with Hyperparameter-Space for Hyperparameter-Optimization
-model = lgbm.LGBMClassifier(
-    objective="binary",
-    min_child_samples=MIN_CHILD_SAMPLES,
+model = neural_network.MLPClassifier(
+    early_stopping=True,
+    n_iter_no_change=EARLY_STOPPING_ROUNDS_FEATURE_SELECTION,
+    validation_fraction=0.23,
+    max_iter=MAX_ITER_NN,
     random_state=RANDOM_STATE
 )
 
@@ -222,26 +223,22 @@ selector = model_selection.RandomizedSearchCV(
 )
 
 selector.fit(
-    X_selected,
-    y_train,
-    eval_set=[(X_val[selected_features], y_val)],
-    callbacks=[lgbm.early_stopping(stopping_rounds=EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION)],
-    sample_weight=classes_weights
+    X_train[selected_features],
+    y_train
 )
 
 # Performance
-model = lgbm.LGBMClassifier(
-    min_child_samples=MIN_CHILD_SAMPLES,
-    objective="binary",
+model = neural_network.MLPClassifier(
+    early_stopping=True,
+    n_iter_no_change=EARLY_STOPPING_ROUNDS_FEATURE_SELECTION,
+    validation_fraction=0.23,
+    max_iter=MAX_ITER_NN,
     random_state=RANDOM_STATE,
     **selector.best_params_
 )
 model.fit(
-    X_selected,
-    y_train,
-    eval_set=[(X_val[selected_features], y_val)],
-    callbacks=[lgbm.early_stopping(stopping_rounds=EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION)],
-    sample_weight=classes_weights
+    X_train[selected_features],
+    y_train
 )
 
 y_pred = model.predict(X_test[selected_features])
@@ -255,11 +252,11 @@ print(f"F1:   {test_f1}")
 print(f"PREC: {test_precision}")
 print(f"REC:  {test_recall}")
 
-plt.plot(model._evals_result["valid_0"]["binary_logloss"], label="Validation Logloss")
+plt.plot(model.loss_curve_, label="Validation Logloss")
 plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
 plt.legend()
 
-plt.savefig("../plots/lgbm_validation_logloss_hyperparameter_selection.png", dpi=300)
+plt.savefig("../plots/nn_validation_logloss_hyperparameter_selection.png", dpi=300)
 plt.clf()
 
 """

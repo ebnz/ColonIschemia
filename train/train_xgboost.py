@@ -13,7 +13,7 @@ USER_SETTINGS farther down in script
 """
 Load Data
 """
-data = pd.read_csv("data/complete_data/data_complete_gt.csv")
+data = pd.read_csv("../data/complete_data/data_complete_gt.csv")
 data = data.set_index("Record ID")
 
 preferred_columns_x = ['ARDS',
@@ -96,6 +96,9 @@ USER-SETTINGS
 TEST_SIZE = 0.23
 VALIDATION_SIZE = 0.23
 
+# Define Random State
+RANDOM_STATE = 45
+
 # Define Training Target
 y = data["Ischämie?"]
 #y = data["Ischämie?"] == data["Findings compatible with ischemia"]
@@ -115,7 +118,7 @@ MAX_DEPTH_INIT = 3
 
 """Hyperparameter-Selection"""
 # early_stopping_rounds in Hyperparameter-Selection
-EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION = 5
+EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION = 3
 
 # Number of Runs of the Hyperparameter-Optimization
 HP_OPTIMIZATION_ITERATIONS = 20
@@ -123,16 +126,18 @@ HP_OPTIMIZATION_ITERATIONS = 20
 # Hyperparameters and their Values to optimize
 HYPERPARAM_SPACE = {
         'learning_rate': np.linspace(0.01, 0.5, 50),
-        'max_depth': np.arange(3, 4),   # Excluding stop-Variable
-        'subsample': np.linspace(0.01, 0.75, 100),
+        'max_depth': np.arange(2, 4),   # Excluding stop-Variable
+        'subsample': np.linspace(0.5, 1.0, 100)
 }
 
 """
 Generate Dataset-Splits
 """
 # Define Train-, Validation- and Test-Splits
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=TEST_SIZE)
-X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train, test_size=VALIDATION_SIZE)
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
+                                                                    test_size=TEST_SIZE, random_state=RANDOM_STATE)
+X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train,
+                                                                  test_size=VALIDATION_SIZE, random_state=RANDOM_STATE)
 
 """
 Model-based Feature-Selection
@@ -141,7 +146,8 @@ Model-based Feature-Selection
 model = xgb.XGBClassifier(
     learning_rate=LEARNING_RATE_INIT,
     max_depth=MAX_DEPTH_INIT,
-    objective="binary:logistic"
+    objective="binary:logistic",
+    seed=RANDOM_STATE
 )
 
 selector = feature_selection.SequentialFeatureSelector(
@@ -160,7 +166,8 @@ model = xgb.XGBClassifier(
     learning_rate=LEARNING_RATE_INIT,
     max_depth=MAX_DEPTH_INIT,
     objective="binary:logistic",
-    early_stopping_rounds=EARLY_STOPPING_ROUNDS_FEATURE_SELECTION
+    early_stopping_rounds=EARLY_STOPPING_ROUNDS_FEATURE_SELECTION,
+    seed=RANDOM_STATE
 )
 
 # Calculate Class-Weights for balanced Dataset
@@ -180,11 +187,16 @@ test_f1 = metrics.f1_score(y_test, y_pred)
 test_precision = metrics.precision_score(y_test, y_pred)
 test_recall = metrics.recall_score(y_test, y_pred)
 
+print(f"ACC:  {test_accuracy}")
+print(f"F1:   {test_f1}")
+print(f"PREC: {test_precision}")
+print(f"REC:  {test_recall}")
+
 plt.plot(model.evals_result()["validation_0"]["logloss"], label="Validation Logloss")
 plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
 plt.legend()
 
-plt.savefig("plots/xgb_validation_logloss_feature_selection.png", dpi=300)
+plt.savefig("../plots/xgb_validation_logloss_feature_selection.png", dpi=300)
 plt.clf()
 
 """
@@ -193,14 +205,16 @@ Hyperparameter-Selection
 # Define Model and RandomizedSearchCV with Hyperparameter-Space for Hyperparameter-Optimization
 model = xgb.XGBClassifier(
     objective="binary:logistic",
-    early_stopping_rounds=EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION
+    early_stopping_rounds=EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION,
+    seed=RANDOM_STATE
 )
 
 selector = model_selection.RandomizedSearchCV(
     model,
     HYPERPARAM_SPACE,
     n_iter=HP_OPTIMIZATION_ITERATIONS,
-    cv=3
+    cv=3,
+    random_state=RANDOM_STATE
 )
 
 selector.fit(
@@ -214,6 +228,7 @@ selector.fit(
 model = xgb.XGBClassifier(
     objective="binary:logistic",
     early_stopping_rounds=EARLY_STOPPING_ROUNDS_HYPERPARAMETER_SELECTION,
+    seed=RANDOM_STATE,
     **selector.best_params_
 )
 model.fit(
@@ -229,11 +244,16 @@ test_f1 = metrics.f1_score(y_test, y_pred)
 test_precision = metrics.precision_score(y_test, y_pred)
 test_recall = metrics.recall_score(y_test, y_pred)
 
+print(f"ACC:  {test_accuracy}")
+print(f"F1:   {test_f1}")
+print(f"PREC: {test_precision}")
+print(f"REC:  {test_recall}")
+
 plt.plot(model.evals_result()["validation_0"]["logloss"], label="Validation Logloss")
 plt.title(f"Acc: {test_accuracy:.3f} | F1: {test_f1:.3f} | Prec: {test_precision:.3f} | Rec: {test_recall:.3f}")
 plt.legend()
 
-plt.savefig("plots/xgb_validation_logloss_hyperparameter_selection.png", dpi=300)
+plt.savefig("../plots/xgb_validation_logloss_hyperparameter_selection.png", dpi=300)
 plt.clf()
 
 """

@@ -125,7 +125,7 @@ for dataset_name in data.keys():
 Imputation
 Impute the Datasets using the MICE-Algorithm
 """
-def mice(data, m) -> pd.DataFrame:
+def mice(data, m) -> list[pd.DataFrame]:
     """
     Multiple Imputation by Chained Equations (MICE) algorithm for imputing missing values in the DataFrame.
 
@@ -254,14 +254,14 @@ for dataset_name in data.keys():
 """
 Shuffle Data
 """
-data_merged = shuffle(data_merged)
+data_merged = shuffle(data_merged, random_state=42)
 
 """
 Export Data
 """
 # All data (e.g. for Semi-Supervised Learning)
-data_merged.to_csv("data/complete_data/data_complete.csv")
+data_merged.to_csv("../data/complete_data/data_complete.csv")
 
 # Only data with GT-Labels (Ischämie?-Column not null)
 gt_data = data_merged[~pd.isnull(data_merged["Ischämie?"])]
-gt_data.to_csv("data/complete_data/data_complete_gt.csv")
+gt_data.to_csv("../data/complete_data/data_complete_gt.csv")
