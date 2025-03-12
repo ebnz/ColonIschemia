@@ -93,7 +93,8 @@ USER-SETTINGS
 """
 # Define Train-, Validation-Split Sizes
 # VALIDATION_SIZE is relative to size of Complete Dataset minus Datarows of Test-Set
-TEST_SIZE = 0.3
+TEST_SIZE = 0.23
+VALIDATION_SIZE = 0.23
 
 # Feature-Selection Values
 acc_fs = []
@@ -130,7 +131,7 @@ for RANDOM_STATE in range(10):
     HYPERPARAM_SPACE = {
             'n_estimators': np.arange(2, 5),
             'max_depth': np.arange(2, 4),   # Excluding stop-Variable
-            'min_impurity_decrease': np.linspace(0.001, 0.5, 100)
+            'min_impurity_decrease': np.linspace(0.001, 0.5, 10)
     }
 
     """
@@ -188,6 +189,13 @@ for RANDOM_STATE in range(10):
     """
     Hyperparameter-Selection
     """
+    X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train,
+                                                                      test_size=VALIDATION_SIZE,
+                                                                      random_state=RANDOM_STATE)
+
+    # Calculate Class-Weights for balanced Dataset
+    classes_weights = class_weight.compute_sample_weight(class_weight='balanced', y=y_train)
+
     # Define Model and RandomizedSearchCV with Hyperparameter-Space for Hyperparameter-Optimization
     model = RandomForestClassifier(random_state=RANDOM_STATE)
 
@@ -200,7 +208,7 @@ for RANDOM_STATE in range(10):
     )
 
     selector.fit(
-        X_selected,
+        X_train[selected_features],
         y_train,
         sample_weight=classes_weights
     )
@@ -208,7 +216,7 @@ for RANDOM_STATE in range(10):
     # Performance
     model = RandomForestClassifier(random_state=RANDOM_STATE, **selector.best_params_)
     model.fit(
-        X_selected,
+        X_train[selected_features],
         y_train,
         sample_weight=classes_weights
     )

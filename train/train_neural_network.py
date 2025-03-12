@@ -95,7 +95,7 @@ TEST_SIZE = 0.23
 VALIDATION_SIZE = 0.23
 
 # Max Epochs for NN Training
-MAX_ITER_NN = 100
+MAX_ITER_NN = 300
 
 # Feature-Selection Values
 acc_fs = []
@@ -133,9 +133,8 @@ for RANDOM_STATE in range(10):
 
     # Hyperparameters and their Values to optimize
     HYPERPARAM_SPACE = {
-            'learning_rate_init': np.linspace(0.01, 0.5, 50),
+            'learning_rate_init': np.linspace(0.01, 0.2, 10),
             'hidden_layer_sizes': [
-                (16, 8, 4),
                 (4, 4, 4),
                 (8, 4),
                 (4, 4)

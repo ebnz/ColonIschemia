@@ -139,9 +139,9 @@ for RANDOM_STATE in range(10):
 
     # Hyperparameters and their Values to optimize
     HYPERPARAM_SPACE = {
-            'learning_rate': np.linspace(0.01, 0.5, 50),
+            'learning_rate': np.linspace(0.001, 0.2, 10),
             'num_leaves': np.arange(2, 4),  # Excluding stop-Variable
-            'subsample': np.linspace(0.5, 1.0, 100)
+            'subsample': np.linspace(0.5, 1.0, 10)
     }
 
     """

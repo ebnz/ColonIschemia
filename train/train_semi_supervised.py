@@ -36,7 +36,7 @@ X_gt = data_gt[preferred_columns_x]
 USER-SETTINGS
 """
 # Define Train-, Test-Split Sizes
-TEST_SIZE = 0.3
+TEST_SIZE = 0.23
 
 # Vanilla Values
 acc_vanilla = []
@@ -79,8 +79,8 @@ for RANDOM_STATE in range(50):
     model = xgb.XGBClassifier(
         objective="binary:logistic",
         max_depth=3,
-        learning_rate=0.19,
-        subsample=1.0,
+        learning_rate=0.15,
+        subsample=0.8,
         seed=RANDOM_STATE
     )
 
@@ -100,7 +100,8 @@ for RANDOM_STATE in range(50):
     model = xgb.XGBClassifier(
         objective="binary:logistic",
         max_depth=3,
-        learning_rate=0.19,
+        learning_rate=0.15,
+        subsample=0.8,
         seed=RANDOM_STATE
     )
 
