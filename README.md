@@ -22,7 +22,7 @@ We mainly focus on three different Classification-Tasks:
 * Predict the reasonability of Endoscopy for giving a diagnosis on Colon Ischemia
   * Columns "Ischämie?" == "Findings compatible with ischemia" in surgical/endoscopy data
 * Predict the severeness of Colon Ischemia
-  * Columns ("Enterectomy" $\vee$ "Colectomy" $\vee$ "Exploration") $\wedge$ "Others_surgery_type_text:" $\notin$ ["Abdo Mac", "AbdoMAC", "AbdoVac"]
+  * Columns ("Enterectomy" $\vee$ "Colectomy") $\vee$ ("Exploration" $\wedge$ "Others_surgery_type_text:" $\notin$ ["Abdo Mac", "AbdoMAC", "AbdoVac"])
 
 ### Structure of the `data/`-Directory
 

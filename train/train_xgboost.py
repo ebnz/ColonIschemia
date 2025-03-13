@@ -108,6 +108,9 @@ f1_hp = []
 prec_hp = []
 rec_hp = []
 
+# Dict for Feature-Usage
+selected_feature_frequency = {}
+
 for RANDOM_STATE in range(10):
 
     # Define Training Target
@@ -242,6 +245,15 @@ for RANDOM_STATE in range(10):
     f1_hp.append(metrics.f1_score(y_test, y_pred))
     prec_hp.append(metrics.precision_score(y_test, y_pred))
     rec_hp.append(metrics.recall_score(y_test, y_pred))
+
+    for feature in selected_features:
+        if feature in selected_feature_frequency.keys():
+            selected_feature_frequency[feature] += 1
+        else:
+            selected_feature_frequency[feature] = 1
+
+print("Selected Features Frequency: ")
+print(selected_feature_frequency)
 
 print("Feature Selection: ")
 print(f"ACC: Mean: {np.mean(acc_fs)} | "

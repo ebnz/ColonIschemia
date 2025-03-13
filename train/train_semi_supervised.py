@@ -15,9 +15,9 @@ data = pd.read_csv("../data/complete_data/data_complete.csv")
 data = data.set_index("Record ID")
 
 preferred_columns_x = ['ARDS',
-                       'Distension',
+                       'Adipositas',
                        'Endoscopic findings?',
-                       'CPK day of endoscopy']
+                       'Anti-diabetic medication']
 
 preferred_columns_y = ['Ischämie?',
                      'Findings compatible with ischemia',
