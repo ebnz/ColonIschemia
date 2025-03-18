@@ -17,7 +17,7 @@ data = data.set_index("Record ID")
 preferred_columns_x = ['ARDS',
                        'Adipositas',
                        'Endoscopic findings?',
-                       'Anti-diabetic medication']
+                       'Cyanotic membrane']
 
 preferred_columns_y = ['Ischämie?',
                      'Findings compatible with ischemia',
