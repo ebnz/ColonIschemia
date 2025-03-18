@@ -42,13 +42,13 @@ P_VALUE_THRESHOLD = 0.5
 """
 Load Data
 """
-data_common = pd.read_csv("../data/prep_data/data_common.csv")
-data_personal = pd.read_csv("../data/prep_data/data_personal.csv")
-data_imaging = pd.read_csv("../data/prep_data/data_imaging.csv")
-data_endo = pd.read_csv("../data/prep_data/data_endo.csv")
-data_lab_endo = pd.read_csv("../data/prep_data/data_lab_endo.csv")
-data_surgical = pd.read_csv("../data/prep_data/data_surgical.csv")
-data_lab_surgical = pd.read_csv("../data/prep_data/data_lab_surgical.csv")
+data_common = pd.read_csv("data/prep_data/data_common.csv")
+data_personal = pd.read_csv("data/prep_data/data_personal.csv")
+data_imaging = pd.read_csv("data/prep_data/data_imaging.csv")
+data_endo = pd.read_csv("data/prep_data/data_endo.csv")
+data_lab_endo = pd.read_csv("data/prep_data/data_lab_endo.csv")
+data_surgical = pd.read_csv("data/prep_data/data_surgical.csv")
+data_lab_surgical = pd.read_csv("data/prep_data/data_lab_surgical.csv")
 
 data_common["Repeat Instance"] = 1
 data_personal["Repeat Instance"] = 1
@@ -260,8 +260,8 @@ data_merged = shuffle(data_merged, random_state=42)
 Export Data
 """
 # All data (e.g. for Semi-Supervised Learning)
-data_merged.to_csv("../data/complete_data/data_complete.csv")
+data_merged.to_csv("data/complete_data/data_complete.csv")
 
 # Only data with GT-Labels (Ischämie?-Column not null)
 gt_data = data_merged[~pd.isnull(data_merged["Ischämie?"])]
-gt_data.to_csv("../data/complete_data/data_complete_gt.csv")
+gt_data.to_csv("data/complete_data/data_complete_gt.csv")

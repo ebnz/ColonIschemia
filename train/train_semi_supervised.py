@@ -11,7 +11,7 @@ USER_SETTINGS farther down in script
 """
 Load Data
 """
-data = pd.read_csv("../data/complete_data/data_complete.csv")
+data = pd.read_csv("data/complete_data/data_complete.csv")
 data = data.set_index("Record ID")
 
 preferred_columns_x = ['ARDS',

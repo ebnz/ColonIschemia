@@ -37,13 +37,13 @@ We mainly focus on three different Classification-Tasks:
 
 ## How to use this Repository
 
-1. Create a file `data/raw_data.csv` which contains the Raw Clinical Record Data. 
+1. Create a file `data/data.csv` which contains the Raw Clinical Record Data. 
 2. Run `pip3 install -r requirements.txt` to install all the dependencies. 
 2. Run `python3 data_preprocessing/generate_subdata.py` to generate the Sub-Data. 
 3. Run `python3 data_preprocessing/data_preprocessing.py` to fill in Conditional Columns. 
 4. Run `python3 data_preprocessing/feature_selection.py` to filter out the (hopefully!) irrelevant Features. 
 5. Run `python3 train/train_xgboost.py` (or other Training-Script) to Train a Model. 
-6. View the directory `plots/` to review the Training-Results. 
+6. View the directory `plots/` to review the SHAP-Results. 
 7. Fine-Tune the Models, mutating the Parameters in the Script's Sections called `USER-SETTINGS`. 
 
 | Folder-Name        | Contents                                       |

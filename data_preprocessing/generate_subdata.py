@@ -2,7 +2,7 @@ import copy
 import pandas as pd
 from itertools import product
 
-data = pd.read_csv("../data/data.csv", dtype=str)
+data = pd.read_csv("data/data.csv", dtype=str)
 
 """
 Split data into subdata-Categories
@@ -785,11 +785,11 @@ for key in lab_labels_surgical.keys():
 """
 Export data
 """
-data_common.to_csv("../data/sub_data/data_common.csv")
-data_personal.to_csv("../data/sub_data/data_personal.csv")
-data_imaging.to_csv("../data/sub_data/data_imaging.csv")
-data_endo.to_csv("../data/sub_data/data_endo.csv")
-data_lab_endo.to_csv("../data/sub_data/data_lab_endo.csv")
-data_surgical.to_csv("../data/sub_data/data_surgical.csv")
-data_lab_surgical.to_csv("../data/sub_data/data_lab_surgical.csv")
+data_common.to_csv("data/sub_data/data_common.csv")
+data_personal.to_csv("data/sub_data/data_personal.csv")
+data_imaging.to_csv("data/sub_data/data_imaging.csv")
+data_endo.to_csv("data/sub_data/data_endo.csv")
+data_lab_endo.to_csv("data/sub_data/data_lab_endo.csv")
+data_surgical.to_csv("data/sub_data/data_surgical.csv")
+data_lab_surgical.to_csv("data/sub_data/data_lab_surgical.csv")
 
