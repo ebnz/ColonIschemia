@@ -13,13 +13,13 @@ USER_SETTINGS farther down in script
 """
 Load Data
 """
-data = pd.read_csv("../data/complete_data/data_complete_gt.csv")
+data = pd.read_csv("data/complete_data/data_complete_gt.csv")
 data = data.set_index("Record ID")
 
 preferred_columns_x = ['ARDS',
                        'Adipositas',
                        'Endoscopic findings?',
-                       'Anti-diabetic medication']
+                       'Cyanotic membrane']
 
 # Define Training Labels
 X = data[preferred_columns_x]
@@ -72,6 +72,7 @@ print(f"PREC: {prec}")
 print(f"REC: {rec}")
 
 replacements = {
+    "ARDS": "Reason for Admission: ARDS",
     "Endoscopic findings?": "Endoscopic findings"
 }
 columns = [replacements[item] if item in replacements.keys() else item for item in X_test.columns.tolist()]
@@ -79,7 +80,7 @@ columns = [replacements[item] if item in replacements.keys() else item for item 
 shap_values = shap.TreeExplainer(model).shap_values(X_test)
 shap.summary_plot(shap_values, X_test, plot_type="bar", feature_names=columns, show=False)
 plt.xlabel("mean(|SHAP value|) (average impact on model output)")
-plt.savefig("../plots/shap_impact_detecting_ischemia.png")
+plt.savefig("plots/shap_impact_detecting_ischemia.png")
 plt.clf()
 
 """
@@ -87,9 +88,9 @@ SHAP-Analysis Neural Network
 Task 2: Endoscopic Expressiveness
 """
 preferred_columns_x = ['ARDS',
-                       'Adipositas',
-                       'GIT_comorbidities',
-                       'Sepsis']
+                       'Bilirubin day of endoscopy',
+                       'Distension',
+                       'Infection']
 
 # Define Training Labels
 X = data[preferred_columns_x]
@@ -107,7 +108,7 @@ model = neural_network.MLPClassifier(
         validation_fraction=0.23,
         max_iter=300,
         random_state=42,
-        learning_rate_init=0.03111111,
+        learning_rate_init=0.03,
         hidden_layer_sizes=(8, 4)
 )
 
@@ -127,8 +128,9 @@ print(f"REC: {rec}")
 
 replacements = {
     "ARDS": "Reason for Admission: ARDS",
-    "Sepsis": "Reason for Admission: Sepsis",
-    "GIT_comorbidities": "Comorbidities: Gastrointestinal"
+    "Bilirubin day of endoscopy": "Blood Marker: Bilirubin",
+    "Infection": "Malignancy: Infection",
+    "Distension": "Radiological findings: Distension"
 }
 columns = [replacements[item] if item in replacements.keys() else item for item in X_test.columns.tolist()]
 
@@ -137,5 +139,5 @@ shap_values = explainer.shap_values(X_test)
 shap.summary_plot(shap_values[:, :, 1], plot_type="bar", feature_names=columns, show=False)
 plt.xlabel("mean(|SHAP value|) (average impact on model output)")
 plt.xticks([0.005, 0.01, 0.015, 0.02])
-plt.savefig("../plots/shap_impact_endoscopy_expressiveness.png")
+plt.savefig("plots/shap_impact_endoscopy_expressiveness.png")
 plt.clf()
