@@ -33,6 +33,7 @@ jobs:
       with:
         python-version: '3.13'
         cache: 'pip' # caching pip dependencies
+    - name: Install Dependencies
       run: pip install -r requirements.txt
 
     - name: Make HTML
@@ -43,7 +44,6 @@ jobs:
       uses: actions/upload-pages-artifact@v3
       with:
         path: './docs/_build'
-      
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
