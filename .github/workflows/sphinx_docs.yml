@@ -34,7 +34,7 @@ jobs:
         python-version: '3.13'
         cache: 'pip' # caching pip dependencies
     - name: Install Dependencies
-      run: pip install -r requirements.txt
+      run: pip install -r ./docs/requirements.txt
 
     - name: Make HTML
       working-directory: ./docs
