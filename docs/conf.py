@@ -28,7 +28,11 @@ source_suffix = {
     '.md': 'markdown',
 }
 
-
+# MyST Conf
+myst_enable_extensions = [
+    "dollarmath",
+    "amsmath"
+]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
